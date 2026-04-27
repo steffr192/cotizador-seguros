@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  GENERADOR DE COTIZACIÓN DE SEGUROS
+  ============================================================
+  Autora:       Steffany Ramos
+  Fecha:        25/04/2026
+  Descripción:  Herramienta para generar cotizaciones de
+                seguros en formato PDF profesional.
+
+  © 2026 Steffany Ramos. Todos los derechos reservados.
+  Este software es propiedad intelectual de su autora.
+  Queda prohibida su reproducción, distribución o uso
+  sin autorización expresa y por escrito de Steffany Ramos.
+  ============================================================
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Cotización de Seguros — © Steffany Ramos 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap');
+
+:root {
+  --bg: #f4f2ee;
+  --surface: #ffffff;
+  --border: #ddd8d0;
+  --accent: #c0392b;
+  --accent2: #e74c3c;
+  --accent-light: #fdf0ef;
+  --text: #1a1a1a;
+  --muted: #666;
+  --subtle: #999;
+  --success: #2e7d32;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 32px 16px 60px;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.app-header .logo-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--accent);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.app-header .logo-area h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.app-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.card-head {
+  background: var(--accent);
+  color: white;
+  padding: 12px 22px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body { padding: 22px 24px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.span2 { grid-column: span 2; }
+.field.span3 { grid-column: span 3; }
+
+label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+input, select, textarea {
+  background: #fafaf8;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  background: white;
+}
+
+textarea { resize: vertical; min-height: 68px; }
+
+/* Planes */
+.planes-list { display: flex; flex-direction: column; gap: 16px; }
+
+.plan-item {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.plan-header {
+  background: #f7f4f0;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.plan-header input[type="text"] {
+  font-weight: 700;
+  font-size: 0.92rem;
+  flex: 1;
+  min-width: 160px;
+  background: white;
+}
+
+.plan-body { padding: 14px 16px; }
+
+.plan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+/* Coberturas tabla */
+.cob-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.cob-table th {
+  background: var(--accent);
+  color: white;
+  padding: 7px 10px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.cob-table td { padding: 7px 8px; vertical-align: middle; border-bottom: 1px solid #eee; }
+.cob-table tr:last-child td { border-bottom: none; }
+.cob-table tr:nth-child(even) td { background: #faf9f7; }
+
+.cob-table td input {
+  padding: 5px 8px;
+  font-size: 0.82rem;
+}
+
+.btn-add-row {
+  background: none;
+  border: 1.5px dashed var(--accent);
+  color: var(--accent);
+  border-radius: 7px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+.btn-add-row:hover { background: var(--accent-light); }
+
+.btn-remove-row {
+  background: none;
+  border: 1px solid #e0a0a0;
+  color: #c0392b;
+  border-radius: 6px;
+  width: 26px; height: 26px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.btn-remove-row:hover { background: #fdf0ef; }
+
+.btn-add-plan {
+  background: none;
+  border: 2px dashed var(--accent);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  width: 100%;
+  transition: background 0.2s;
+}
+.btn-add-plan:hover { background: var(--accent-light); }
+
+.btn-remove-plan {
+  background: none;
+  border: 1px solid #e0a0a0;
+  color: #c0392b;
+  border-radius: 7px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.btn-remove-plan:hover { background: #fdf0ef; }
+
+/* Resumen total */
+.resumen-box {
+  background: var(--accent);
+  color: white;
+  border-radius: 10px;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.resumen-col { text-align: center; }
+.resumen-col .label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.8px; opacity: 0.85; margin-bottom: 4px; }
+.resumen-col .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.8rem; font-weight: 700; }
+
+/* Btn generar */
+.btn-generate {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  width: 100%;
+  text-transform: uppercase;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.25);
+}
+.btn-generate:hover { background: #a93226; transform: translateY(-1px); }
+
+.nota { color: var(--subtle); font-size: 0.78rem; text-align: center; margin-top: 6px; }
+
+@media (max-width: 640px) {
+  .grid-2, .grid-3, .grid-4, .plan-grid { grid-template-columns: 1fr; }
+  .field.span2, .field.span3 { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo-area">
+    <span style="font-size:1.6rem">🛡️</span>
+    <h1>COTIZACIÓN DE SEGUROS</h1>
+  </div>
+  <p>Completá el formulario y descargá el PDF profesional al instante</p>
+</div>
+
+<div class="container">
+
+  <!-- Datos de la aseguradora -->
+  <div class="card">
+    <div class="card-head">🏢 Datos de la Aseguradora</div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div class="field span2"><label>Nombre de la aseguradora</label><input id="a_nombre" type="text" placeholder="Ej: Mi Aseguradora S.A."></div>
+        <div class="field"><label>Teléfono</label><input id="a_tel" type="text" placeholder="0800 000 0000"></div>
+        <div class="field span2"><label>Dirección</label><input id="a_dir" type="text" placeholder="Av. Corrientes 1234, CABA"></div>
+        <div class="field"><label>Sitio web</label><input id="a_web" type="text" placeholder="www.miaseguradora.com.ar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datos del asegurado -->
+  <div class="card">
+    <div class="card-head">👤 Datos del Asegurado</div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div class="field span2"><label>Nombre / Razón Social</label><input id="c_nombre" type="text" placeholder="Empresa Ejemplo S.R.L."></div>
+        <div class="field"><label>CUIT / DNI</label><input id="c_cuit" type="text" placeholder="30-00000000-0"></div>
+        <div class="field span2"><label>Domicilio</label><input id="c_dom" type="text" placeholder="Ciudad, Provincia"></div>
+        <div class="field"><label>Correo electrónico</label><input id="c_email" type="email" placeholder="contacto@empresa.com.ar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalles de la cotización -->
+  <div class="card">
+    <div class="card-head">📋 Detalles de la Cotización</div>
+    <div class="card-body">
+      <div class="grid-4" style="grid-template-columns: 2fr 1fr 1fr 1fr;">
+        <div class="field"><label>Tipo de cotización</label><input id="d_tipo" type="text" placeholder="Ej: Cotización Automotor, Mascotas, Hogar..."></div>
+        <div class="field"><label>Fecha</label><input id="d_fecha" type="date"></div>
+        <div class="field"><label>Validez de oferta</label><input id="d_validez" type="text" placeholder="30 días"></div>
+        <div class="field">
+          <label>Vigencia</label>
+          <select id="d_vigencia">
+            <option>Anual</option>
+            <option selected>Semestral</option>
+            <option>Trimestral</option>
+            <option>Mensual</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Planes -->
+  <div class="card">
+    <div class="card-head">🚗 Planes y Coberturas</div>
+    <div class="card-body">
+      <div class="planes-list" id="planes-container"></div>
+      <button class="btn-add-plan" onclick="addPlanGenerico()" style="margin-top:16px">+ Agregar Plan / Tipo de Vehículo</button>
+
+      <!-- Resumen global -->
+      <div id="resumen-total" style="margin-top:20px"></div>
+    </div>
+  </div>
+
+  <!-- Notas -->
+  <div class="card">
+    <div class="card-head">📝 Notas</div>
+    <div class="card-body">
+      <div class="field">
+        <label>Detalles / Notas</label>
+        <textarea id="d_notas" placeholder="Ej: No cuenta con servicio de asistencia y remolque. Se excluye el uso de fuerzas de seguridad..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-generate" onclick="generarPDF()">⬇ Descargar PDF</button>
+  <p class="nota">El PDF se genera y descarga directamente en tu dispositivo — sin subir datos a ningún servidor</p>
+
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+let planCount = 0;
+
+function parseMonto(s) {
+  // Acepta tanto "10000000" como "10.000.000,00" o "10,000,000.00"
+  if (!s) return 0;
+  const str = String(s).trim();
+  // Si tiene coma como decimal (formato AR): quitar puntos de miles, reemplazar coma por punto
+  if (/\d\.\d{3}/.test(str) || /\d,\d{2}$/.test(str)) {
+    return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+  return parseFloat(str.replace(/[^\d.]/g, '')) || 0;
+}
+
+function fmtMonto(s) {
+  // Formatea cualquier número ingresado como $ 13.300.000,00
+  const n = parseMonto(s);
+  if (!n) return '—';
+  return '$ ' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtNum(n) {
+  return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+const planesEjemplo = [
+  { nombre: 'Plan Básico Vehículos Pesados',   tipoVeh: 'Camión'      },
+  { nombre: 'Plan Básico Vehículos Livianos',  tipoVeh: 'Auto / Pick up' },
+  { nombre: 'Plan Estándar Transporte Carga',  tipoVeh: 'Camión'      },
+  { nombre: 'Plan Estándar Vehículos Mixtos',  tipoVeh: 'Utilitario'  },
+  { nombre: 'Plan Extendido Flota Comercial',  tipoVeh: 'Pick up'     },
+  { nombre: 'Plan Extendido Vehículos Pesados',tipoVeh: 'Camión'      },
+];
+let planEjemploIdx = 0;
+
+function addPlanGenerico() {
+  const ej = planesEjemplo[planEjemploIdx % planesEjemplo.length];
+  planEjemploIdx++;
+  addPlan(ej.nombre, ej.tipoVeh, '', '', '', [
+    ['RC Terceros Transportados', ''],
+    ['RC Terceros No Transportados', ''],
+    ['RC Daños a Cosas', ''],
+  ]);
+}
+
+function addPlan(nombre='', tipoVeh='', totalItems='', mensual='', vigencia='', coberturas=[]) {
+  planCount++;
+  const id = 'plan_' + planCount;
+  const div = document.createElement('div');
+  div.className = 'plan-item';
+  div.id = id;
+
+  div.innerHTML = `
+    <div class="plan-header">
+      <input type="text" placeholder="Nombre del plan (Ej: A-CAM PLAN BASIC CAMIÓN)" value="${nombre}" style="font-weight:700;font-size:0.92rem;flex:1;min-width:160px">
+      <input type="text" placeholder="Tipo de vehículo (Ej: Camión)" value="${tipoVeh}" style="max-width:160px">
+      <button class="btn-remove-plan" onclick="document.getElementById('${id}').remove(); recalcularResumen()">✕ Eliminar plan</button>
+    </div>
+    <div class="plan-body">
+      <div class="plan-grid">
+        <div class="field">
+          <label>Total de ítems</label>
+          <input type="number" placeholder="159" value="${totalItems}" oninput="recalcularResumen()">
+        </div>
+        <div class="field">
+          <label>Cuota Mensual ($)</label>
+          <input type="text" placeholder="3.502.313,40" value="${mensual}" oninput="recalcularResumen()">
+        </div>
+        <div class="field">
+          <label>Total Vigencia ($)</label>
+          <input type="text" placeholder="21.013.880,41" value="${vigencia}" oninput="recalcularResumen()" id="vig_${id}">
+        </div>
+      </div>
+
+      <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Coberturas</div>
+      <table class="cob-table">
+        <thead>
+          <tr>
+            <th style="width:60%">Cobertura</th>
+            <th style="width:32%">Límite / Suma Asegurada</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="cob_${id}"></tbody>
+      </table>
+      <button class="btn-add-row" onclick="addCobertura('${id}')">+ Agregar cobertura</button>
+    </div>
+  `;
+  document.getElementById('planes-container').appendChild(div);
+
+  if (coberturas.length > 0) {
+    coberturas.forEach(c => addCobertura(id, c[0], c[1]));
+  } else {
+    addCobertura(id, 'RC TERCEROS TRANSPORTADOS', '');
+    addCobertura(id, 'RC TERCEROS NO TRANSPORTADOS', '');
+    addCobertura(id, 'RC DAÑOS A COSAS', '');
+  }
+
+  recalcularResumen();
+}
+
+function addCobertura(planId, nombre='', limite='') {
+  const tbody = document.getElementById('cob_' + planId);
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Nombre de la cobertura" value="${nombre}"></td>
+    <td><input type="text" placeholder="$ 455.000.000" value="${limite}"></td>
+    <td><button class="btn-remove-row" onclick="this.closest('tr').remove()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function getPlanes() {
+  const planes = [];
+  document.querySelectorAll('.plan-item').forEach(div => {
+    const inputs = div.querySelectorAll('.plan-header input');
+    const bodyInputs = div.querySelectorAll('.plan-body > .plan-grid input');
+    const nombre = inputs[0]?.value || '';
+    const tipoVeh = inputs[1]?.value || '';
+    const totalItems = bodyInputs[0]?.value || '';
+    const mensual = bodyInputs[1]?.value || '';
+    const vigencia = bodyInputs[2]?.value || '';
+    const coberturas = [];
+    div.querySelectorAll('.cob-table tbody tr').forEach(tr => {
+      const tds = tr.querySelectorAll('input');
+      coberturas.push([tds[0]?.value || '', tds[1]?.value || '']);
+    });
+    planes.push({ nombre, tipoVeh, totalItems, mensual, vigencia, coberturas });
+  });
+  return planes;
+}
+
+function recalcularResumen() {
+  const planes = getPlanes();
+  let totalItems = 0, totalMensual = 0, totalVig = 0;
+
+  planes.forEach(p => {
+    totalItems += parseInt(p.totalItems) || 0;
+    totalMensual += parseMonto(p.mensual);
+    totalVig += parseMonto(p.vigencia);
+  });
+
+  const vigLabel = document.getElementById('d_vigencia')?.value || 'Vigencia';
+
+  document.getElementById('resumen-total').innerHTML = planes.length === 0 ? '' : `
+    <div class="resumen-box">
+      <div class="resumen-col">
+        <div class="label">TOTAL ÍTEMS</div>
+        <div class="val">${totalItems}</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.25);align-self:stretch"></div>
+      <div class="resumen-col">
+        <div class="label">PREMIO MENSUAL</div>
+        <div class="val">$ ${fmtNum(totalMensual)}</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.25);align-self:stretch"></div>
+      <div class="resumen-col">
+        <div class="label">PREMIO ${vigLabel.toUpperCase()}</div>
+        <div class="val">$ ${fmtNum(totalVig)}</div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('d_vigencia').addEventListener('change', recalcularResumen);
+
+function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+// ─── GENERAR PDF ──────────────────────────────────────────────────────────────
+function generarPDF() {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, H = 297;
+  const ml = 15, mr = 15, usable = W - ml - mr;
+
+  // Colores
+  const RED   = [192, 57, 43];
+  const RED2  = [231, 76, 60];
+  const WHITE = [255, 255, 255];
+  const DARK  = [26, 26, 26];
+  const GRAY  = [100, 100, 100];
+  const LGRAY = [200, 200, 200];
+  const BGROW = [245, 242, 238];
+  const BGROW2= [255, 255, 255];
+  const HEADBG= [240, 236, 230];
+
+  let y = 0;
+
+  // ── HEADER ──────────────────────────────────────────────────────────────────
+  // Fondo rojo
+  doc.setFillColor(...RED);
+  doc.rect(0, 0, W, 36, 'F');
+
+  // Franja decorativa inferior del header
+  doc.setFillColor(...RED2);
+  doc.rect(0, 33, W, 3, 'F');
+
+  // Logo / nombre aseguradora
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(...WHITE);
+  doc.text(v('a_nombre') || 'ASEGURADORA', ml, 24);
+
+  // Datos contacto (derecha)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...WHITE);
+  const contactLines = [];
+  if (v('a_dir')) contactLines.push(v('a_dir'));
+  if (v('a_tel')) contactLines.push(v('a_tel'));
+  if (v('a_web')) contactLines.push(v('a_web'));
+  contactLines.forEach((l, i) => {
+    doc.setFont('helvetica', i === 1 ? 'bold' : 'normal');
+    doc.setFontSize(i === 1 ? 10 : 8.5);
+    doc.text(l, W - mr, 12 + i * 8, { align: 'right' });
+  });
+
+  y = 44;
+
+  // ── DATOS ASEGURADO ──────────────────────────────────────────────────────────
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...DARK);
+  doc.text(v('c_nombre') || '—', ml, y);
+  y += 6;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRAY);
+  const aseguradoInfo = [];
+  if (v('c_cuit')) aseguradoInfo.push('CUIT: ' + v('c_cuit'));
+  if (v('c_dom')) aseguradoInfo.push('Domicilio: ' + v('c_dom'));
+  if (v('c_email')) aseguradoInfo.push('Email: ' + v('c_email'));
+
+  aseguradoInfo.forEach(l => { doc.text(l, ml, y); y += 5.5; });
+
+  // Vigencia (derecha)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRAY);
+  function fmtFecha(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  if (v('d_vigencia')) doc.text('Vigencia: ' + v('d_vigencia'), W - mr, 48, { align: 'right' });
+  if (v('d_fecha')) doc.text('Fecha: ' + fmtFecha(v('d_fecha')), W - mr, 54, { align: 'right' });
+  if (v('d_validez')) doc.text('Validez: ' + v('d_validez'), W - mr, 60, { align: 'right' });
+
+  y = Math.max(y + 4, 68);
+
+  // Línea separadora roja
+  doc.setDrawColor(...RED);
+  doc.setLineWidth(0.8);
+  doc.line(ml, y, W - mr, y);
+  y += 8;
+
+  // ── TÍTULO COTIZACIÓN ────────────────────────────────────────────────────────
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...DARK);
+  const tipoCot = v('d_tipo') || 'Cotización';
+  const titulo = tipoCot;
+  doc.text(titulo, W / 2, y, { align: 'center' });
+  y += 10;
+
+  // ── TABLA RESUMEN DE PLANES ──────────────────────────────────────────────────
+  const planes = getPlanes();
+  const vigLabel = v('d_vigencia') || 'Vigencia';
+
+  if (planes.length > 0) {
+    // Encabezado tabla — última columna más ancha para no cortar texto
+    const cols = [
+      { label: 'TOTAL ÍTEMS', x: ml, w: usable * 0.13 },
+      { label: 'COBERTURA / PLAN', x: ml + usable * 0.13, w: usable * 0.34 },
+      { label: 'TIPO VEHÍCULO', x: ml + usable * 0.47, w: usable * 0.18 },
+      { label: 'CUOTA MENSUAL', x: ml + usable * 0.65, w: usable * 0.17 },
+      { label: 'TOTAL ' + vigLabel.toUpperCase(), x: ml + usable * 0.82, w: usable * 0.18 },
+    ];
+
+    doc.setFillColor(...RED);
+    doc.rect(ml, y, usable, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...WHITE);
+    cols.forEach(c => doc.text(c.label, c.x + 3, y + 5.5));
+    y += 8;
+
+    planes.forEach((p, idx) => {
+      const rh = 8;
+      doc.setFillColor(...(idx % 2 === 0 ? BGROW : BGROW2));
+      doc.rect(ml, y, usable, rh, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...DARK);
+      doc.text(p.totalItems || '—', cols[0].x + cols[0].w / 2, y + 5.5, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.8);
+      const nLines = doc.splitTextToSize(p.nombre || '—', cols[1].w - 5);
+      doc.text(nLines[0], cols[1].x + 3, y + 5.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.8);
+      doc.text(p.tipoVeh || '—', cols[2].x + 3, y + 5.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.8);
+      doc.text(fmtMonto(p.mensual), cols[3].x + cols[3].w - 3, y + 5.5, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...RED);
+      doc.text(fmtMonto(p.vigencia), cols[4].x + cols[4].w - 3, y + 5.5, { align: 'right' });
+
+      doc.setDrawColor(...LGRAY);
+      doc.setLineWidth(0.2);
+      doc.line(ml, y + rh, ml + usable, y + rh);
+      y += rh;
+    });
+
+    y += 8;
+
+    // Tabla resumen TOTAL
+    let totalItems = 0, totalMensual = 0, totalVig = 0;
+    planes.forEach(p => {
+      totalItems += parseInt(p.totalItems) || 0;
+      totalMensual += parseMonto(p.mensual);
+      totalVig += parseMonto(p.vigencia);
+    });
+
+    const tw = usable * 0.55, tx = ml + (usable - tw) / 2;
+    doc.setFillColor(...RED);
+    doc.roundedRect(tx, y, tw, 8, 2, 2, 'F');
+    const rcols = [
+      { label: 'ÍTEMS', val: String(totalItems), cx: tx + tw * 0.15 },
+      { label: 'PREMIO MENSUAL', val: '$ ' + fmtNum(totalMensual), cx: tx + tw * 0.48 },
+      { label: 'PREMIO ' + vigLabel.toUpperCase(), val: '$ ' + fmtNum(totalVig), cx: tx + tw * 0.82 },
+    ];
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...WHITE);
+    rcols.forEach(c => doc.text(c.label, c.cx, y + 3.5, { align: 'center' }));
+
+    y += 8;
+    doc.setFillColor(255, 248, 240);
+    doc.roundedRect(tx, y, tw, 9, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...RED);
+    rcols.forEach(c => doc.text(c.val, c.cx, y + 6.5, { align: 'center' }));
+    y += 14;
+  }
+
+  // ── DETALLES COBERTURAS ───────────────────────────────────────────────────────
+  if (planes.some(p => p.coberturas.length > 0)) {
+    // Separador
+    doc.setDrawColor(...LGRAY);
+    doc.setLineWidth(0.4);
+    doc.line(ml, y, W - mr, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...DARK);
+    doc.text('Detalles de las coberturas', ml, y);
+    y += 2;
+    doc.setDrawColor(...RED);
+    doc.setLineWidth(0.5);
+    doc.line(ml, y + 1, ml + 58, y + 1);
+    y += 8;
+
+    // Notas sin límite de líneas — salto de página automático
+    const notas = v('d_notas');
+    if (notas) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.8);
+      doc.setTextColor(60, 60, 60);
+      const nLines = doc.splitTextToSize(notas, usable);
+      nLines.forEach(l => {
+        if (y > H - 22) { doc.addPage(); y = 20; }
+        doc.text(l, ml, y);
+        y += 4.5;
+      });
+      y += 3;
+    }
+
+    planes.forEach(p => {
+      if (p.coberturas.length === 0) return;
+
+      // Si no caben el encabezado + subencabezado + al menos 1 fila → nueva página
+      if (y + 8 + 7 + 8 > H - 22) { doc.addPage(); y = 20; }
+
+      // Encabezado del plan
+      doc.setFillColor(...RED);
+      doc.rect(ml, y, usable, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...WHITE);
+      doc.text(p.nombre || 'Plan', W / 2, y + 5.5, { align: 'center' });
+      y += 8;
+
+      // Sub-encabezado
+      doc.setFillColor(...HEADBG);
+      doc.rect(ml, y, usable, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...DARK);
+      doc.text('COBERTURA', ml + 5, y + 5);
+      doc.text('LÍMITE / SUMA ASEGURADA', W - mr - 5, y + 5, { align: 'right' });
+      y += 7;
+
+      p.coberturas.forEach((cob, ci) => {
+        const rh = 8;
+        // Saltar página si la fila va a quedar tapada por el footer
+        if (y + rh > H - 22) {
+          doc.addPage();
+          y = 20;
+          // Repetir sub-encabezado en la nueva página
+          doc.setFillColor(...HEADBG);
+          doc.rect(ml, y, usable, 7, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.5);
+          doc.setTextColor(...DARK);
+          doc.text('COBERTURA', ml + 5, y + 5);
+          doc.text('LÍMITE / SUMA ASEGURADA', W - mr - 5, y + 5, { align: 'right' });
+          y += 7;
+        }
+        doc.setFillColor(...(ci % 2 === 0 ? BGROW2 : BGROW));
+        doc.rect(ml, y, usable, rh, 'F');
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.2);
+        doc.setTextColor(...DARK);
+        doc.text(cob[0] || '—', ml + 5, y + 5.5);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...RED);
+        doc.text(cob[1] || '—', W - mr - 5, y + 5.5, { align: 'right' });
+
+        doc.setDrawColor(...LGRAY);
+        doc.setLineWidth(0.15);
+        doc.line(ml, y + rh, ml + usable, y + rh);
+        y += rh;
+      });
+
+      y += 8;
+    });
+  }
+
+  // ── FOOTER ────────────────────────────────────────────────────────────────────
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let pg = 1; pg <= totalPages; pg++) {
+    doc.setPage(pg);
+    doc.setFillColor(...HEADBG);
+    doc.rect(0, H - 16, W, 16, 'F');
+    doc.setDrawColor(...RED);
+    doc.setLineWidth(0.6);
+    doc.line(0, H - 16, W, H - 16);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(50, 50, 50);
+    const footLeft = `Fecha: ${fmtFecha(v('d_fecha'))}   Validez de la oferta: ${v('d_validez') || '—'}`;
+    doc.text(footLeft, ml, H - 6);
+    doc.text(String(pg), W - mr, H - 6, { align: 'right' });
+  }
+
+  // Guardar
+  const nombreAseg = v('a_nombre') || 'cotizacion';
+  const cliente = v('c_nombre') || 'cliente';
+  doc.save(`cotizacion_${cliente.replace(/\s+/g,'_')}_${nombreAseg.replace(/\s+/g,'_')}.pdf`);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const hoy = new Date().toISOString().split('T')[0];
+document.getElementById('d_fecha').value = hoy;
+
+// Planes de ejemplo genéricos
+addPlan('Plan Básico Vehículos Pesados', 'Camión', '10', '1.000.000,00', '3.000.000,00', [
+  ['RC Terceros Transportados', '$ 100.000.000'],
+  ['RC Terceros No Transportados', '$ 100.000.000'],
+  ['RC Daños a Cosas', '$ 100.000.000'],
+]);
+addPlan('Plan Básico Vehículos Livianos', 'Auto / Pick up', '5', '500.000,00', '1.500.000,00', [
+  ['RC Terceros Transportados', '$ 50.000.000'],
+  ['RC Terceros No Transportados', '$ 50.000.000'],
+  ['RC Daños a Cosas', '$ 50.000.000'],
+]);
+
+function fmtNum(n) {
+  return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+</script>
+</body>
+</html>
